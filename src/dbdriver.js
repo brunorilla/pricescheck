@@ -1,13 +1,25 @@
 import {default as mongodb} from 'mongodb';
 
-let MongoClient = mongodb.MongoClient;
-const uri = "mongodb+srv://admin:admin@branalanacluster.rjrre.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
-    client = new MongoClient(uri, {useNewUrlParser: true, useUnifiedTopology: true});
-client.connect(err => {
-    const collection = client.db("universidad").collection("alumnos");
-    collection.find({}).toArray(function (err, result) {
-        if (err) throw err;
-        console.log(result);
-        client.close().then(()=> console.log("Conexión cerrada"));
+var MongoClient = mongodb.MongoClient;
+
+function initialize(dbConnectionUrl, dbName, dbCollectionName,successCallback, failureCallback, query, res){
+    let client = new MongoClient(dbConnectionUrl, {useNewUrlParser: true, useUnifiedTopology: true});
+    client.connect(err => {
+        if (err) {
+            console.log(`[MONGO DB connection] Error: ${err}`);
+            failureCallback(err);
+        }
+        const collection = client.db(dbName).collection(dbCollectionName);
+        console.log(`[Mongo DB connection] SUCCESS`);
+         let response = successCallback(query, collection);
+            if(response !== 0){
+            res.send(JSON.stringify(response));
+            } else {
+            res.send("No se encontró un alumno con ese DNI");
+            }
     });
-});
+}
+
+export {
+    initialize
+}
